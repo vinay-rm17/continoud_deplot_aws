@@ -21,11 +21,11 @@ jobs:
 
     - name: Build Docker image
       run: |
-        docker build -t ${{ secrets.DOCKER_USERNAME }}/flask-cd:latest .
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/flask-cd:${{ github.sha }} .
 
     - name: Push Docker image
       run: |
-        docker push ${{ secrets.DOCKER_USERNAME }}/flask-cd:latest
+        docker push ${{ secrets.DOCKER_USERNAME }}/flask-cd:${{ github.sha }}
 
     - name: Deploy to EC2
       uses: appleboy/ssh-action@v1.0.0
@@ -34,7 +34,6 @@ jobs:
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          docker pull ${{ secrets.DOCKER_USERNAME }}/flask-cd:latest
-          docker stop flask-cd || true
-          docker rm flask-cd || true
-          docker run -d -p 80:5000 --name flask-cd ${{ secrets.DOCKER_USERNAME }}/flask-cd:latest
+          docker pull ${{ secrets.DOCKER_USERNAME }}/flask-cd:${GITHUB_SHA}
+          docker rm -f flask-cd || true
+          docker run -d -p 80:5000 --name flask-cd ${{ secrets.DOCKER_USERNAME }}/flask-cd:${GITHUB_SHA}
